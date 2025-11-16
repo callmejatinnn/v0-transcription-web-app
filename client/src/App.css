@@ -648,6 +648,51 @@ body {
   margin-bottom: 6px;
 }
 
+/* Added styles for API status badge */
+.api-status-badge {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.api-status-badge.personal {
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+  color: #2e7d32;
+}
+
+.api-status-badge.server {
+  background: #e3f2fd;
+  border: 1px solid #2196f3;
+  color: #1565c0;
+}
+
+.api-status-badge strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.api-status-badge p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
 .modal-footer {
   display: flex;
   gap: 12px;

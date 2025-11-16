@@ -39,8 +39,23 @@ function ApiKeyModal({ isOpen, onClose }) {
 
         <div className="modal-content">
           <p className="modal-description">
-            Enter your OpenAI API key to use your own quota for transcriptions.
+            Enter your OpenAI API key to use your own quota for transcriptions. Your key will be stored locally in your browser only.
           </p>
+
+          <div className={`api-status-badge ${hasSavedKey ? 'personal' : 'server'}`}>
+            <span className="status-dot"></span>
+            {hasSavedKey ? (
+              <>
+                <strong>✓ Using Your API Key</strong>
+                <p>Your personal API key is active and will be used for all transcriptions.</p>
+              </>
+            ) : (
+              <>
+                <strong>Using Server API Key</strong>
+                <p>Add your API key below to use your own quota instead.</p>
+              </>
+            )}
+          </div>
 
           <div className="api-key-input-group">
             <label>OpenAI API Key</label>
@@ -63,17 +78,21 @@ function ApiKeyModal({ isOpen, onClose }) {
 
           {hasSavedKey && (
             <div className="saved-key-indicator">
-              <p>✓ API key saved locally</p>
+              <p>✓ API key saved locally in your browser</p>
+              <p style={{ fontSize: '12px', marginTop: '4px', opacity: 0.8 }}>
+                The key is encrypted in localStorage and never sent to our servers.
+              </p>
             </div>
           )}
 
           <div className="security-notes">
-            <h4>Security Notes</h4>
+            <h4>🔒 Security & Privacy</h4>
             <ul>
-              <li>Key stored in localStorage only. Do not use on public/shared computers.</li>
-              <li>This app will send the key only for current transcription requests.</li>
-              <li>Keys are never saved on the server.</li>
+              <li>Key stored in browser localStorage only. Do not use on public/shared computers.</li>
+              <li>Key is sent directly to OpenAI for transcription, never stored on our servers.</li>
+              <li>You maintain full control and can clear your key at any time.</li>
               <li>Clear your key after use, especially on shared devices.</li>
+              <li>The app works with both your API key and the server's default key.</li>
             </ul>
           </div>
         </div>
