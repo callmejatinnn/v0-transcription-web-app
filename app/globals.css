@@ -1,3 +1,6 @@
+/* Added Tailwind CSS import for Next.js 16 */
+@import "tailwindcss";
+
 * {
   margin: 0;
   padding: 0;
