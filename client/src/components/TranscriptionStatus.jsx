@@ -7,6 +7,26 @@ function TranscriptionStatus({ uploadProgress, isTranscribing, activityLog, erro
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activityLog]);
 
+  const getErrorSuggestion = (errorMsg) => {
+    if (errorMsg?.includes('Rate limited')) {
+      return {
+        suggestion: 'Check your API quota and try again in a few moments',
+        link: 'https://platform.openai.com/account/usage',
+        linkText: 'View API Usage'
+      };
+    }
+    if (errorMsg?.includes('Invalid or expired API key')) {
+      return {
+        suggestion: 'Verify your API key is correct and active',
+        link: 'https://platform.openai.com/api-keys',
+        linkText: 'Manage API Keys'
+      };
+    }
+    return null;
+  };
+
+  const errorSuggestion = getErrorSuggestion(error);
+
   return (
     <div className="transcription-status">
       <div className="status-header">
@@ -45,6 +65,14 @@ function TranscriptionStatus({ uploadProgress, isTranscribing, activityLog, erro
         <div className="error-box">
           <p className="error-title">Error</p>
           <p className="error-message">{error}</p>
+          {errorSuggestion && (
+            <div className="error-suggestion">
+              <p className="suggestion-text">{errorSuggestion.suggestion}</p>
+              <a href={errorSuggestion.link} target="_blank" rel="noopener noreferrer" className="suggestion-link">
+                {errorSuggestion.linkText} →
+              </a>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,77 +1,79 @@
-import React, { useState, useEffect } from 'react';
+"use client"
+
+import { useState, useEffect } from "react"
 
 function ApiKeyModal({ isOpen, onClose }) {
-  const [apiKey, setApiKey] = useState('');
-  const [showKey, setShowKey] = useState(false);
-  const [hasSavedKey, setHasSavedKey] = useState(false);
+  const [apiKey, setApiKey] = useState("")
+  const [showKey, setShowKey] = useState(false)
+  const [hasSavedKey, setHasSavedKey] = useState(false)
 
   useEffect(() => {
-    const savedKey = localStorage.getItem('openai_api_key');
+    const savedKey = localStorage.getItem("elevenlabs_api_key")
     if (savedKey) {
-      setHasSavedKey(true);
+      setHasSavedKey(true)
     }
-  }, []);
+  }, [])
 
   const handleSave = () => {
     if (apiKey.trim()) {
-      localStorage.setItem('openai_api_key', apiKey);
-      setHasSavedKey(true);
-      setApiKey('');
-      setShowKey(false);
+      localStorage.setItem("elevenlabs_api_key", apiKey)
+      setHasSavedKey(true)
+      setApiKey("")
+      setShowKey(false)
     }
-  };
+  }
 
   const handleClear = () => {
-    localStorage.removeItem('openai_api_key');
-    setHasSavedKey(false);
-    setApiKey('');
-  };
+    localStorage.removeItem("elevenlabs_api_key")
+    setHasSavedKey(false)
+    setApiKey("")
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>API Settings</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         <div className="modal-content">
           <p className="modal-description">
-            Enter your OpenAI API key to use your own quota for transcriptions. Your key will be stored locally in your browser only.
+            Enter your ElevenLabs API key to use your own quota for transcriptions. Your key will be stored locally in
+            your browser only.
           </p>
 
-          <div className={`api-status-badge ${hasSavedKey ? 'personal' : 'server'}`}>
+          <div className={`api-status-badge ${hasSavedKey ? "personal" : "server"}`}>
             <span className="status-dot"></span>
             {hasSavedKey ? (
               <>
                 <strong>✓ Using Your API Key</strong>
-                <p>Your personal API key is active and will be used for all transcriptions.</p>
+                <p>Your personal ElevenLabs API key is active and will be used for all transcriptions.</p>
               </>
             ) : (
               <>
                 <strong>Using Server API Key</strong>
-                <p>Add your API key below to use your own quota instead.</p>
+                <p>Add your ElevenLabs API key below to use your own quota instead.</p>
               </>
             )}
           </div>
 
           <div className="api-key-input-group">
-            <label>OpenAI API Key</label>
+            <label>ElevenLabs API Key</label>
             <div className="input-wrapper">
               <input
-                type={showKey ? 'text' : 'password'}
+                type={showKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
+                placeholder="Enter your ElevenLabs API key..."
                 className="api-key-input"
               />
-              <button 
-                className="toggle-visibility"
-                onClick={() => setShowKey(!showKey)}
-              >
-                {showKey ? '👁️' : '👁️‍🗨️'}
+              <button className="toggle-visibility" onClick={() => setShowKey(!showKey)}>
+                {showKey ? "👁️" : "👁️‍🗨️"}
               </button>
             </div>
           </div>
@@ -79,7 +81,7 @@ function ApiKeyModal({ isOpen, onClose }) {
           {hasSavedKey && (
             <div className="saved-key-indicator">
               <p>✓ API key saved locally in your browser</p>
-              <p style={{ fontSize: '12px', marginTop: '4px', opacity: 0.8 }}>
+              <p style={{ fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
                 The key is encrypted in localStorage and never sent to our servers.
               </p>
             </div>
@@ -89,10 +91,15 @@ function ApiKeyModal({ isOpen, onClose }) {
             <h4>🔒 Security & Privacy</h4>
             <ul>
               <li>Key stored in browser localStorage only. Do not use on public/shared computers.</li>
-              <li>Key is sent directly to OpenAI for transcription, never stored on our servers.</li>
+              <li>Key is sent directly to ElevenLabs for transcription, never stored on our servers.</li>
               <li>You maintain full control and can clear your key at any time.</li>
               <li>Clear your key after use, especially on shared devices.</li>
               <li>The app works with both your API key and the server's default key.</li>
+              <li>
+                <a href="https://elevenlabs.io/app/billing/api-keys" target="_blank" rel="noopener noreferrer">
+                  Get your ElevenLabs API key here
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -106,11 +113,13 @@ function ApiKeyModal({ isOpen, onClose }) {
               Clear Saved Key
             </button>
           )}
-          <button className="cancel-btn" onClick={onClose}>Close</button>
+          <button className="cancel-btn" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default ApiKeyModal;
+export default ApiKeyModal
