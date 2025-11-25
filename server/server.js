@@ -68,26 +68,29 @@ app.post("/api/transcribe", upload.single("file"), async (req, res) => {
     const fileBuffer = fs.readFileSync(tempFilePath)
     const fileName = req.file.originalname
 
-    // Map language codes to ElevenLabs format if needed
-    const languageCode = language && language !== "auto" ? language : null
+    const FormData = (await import("form-data")).default
+    const form = new FormData()
 
-    const elevenLabsResponse = await axios.post(
-      "https://api.elevenlabs.io/v1/speech-to-text",
-      {
-        file: fileBuffer,
-        model_id: "scribe_v1",
-        language_code: languageCode,
-        diarize: diarization === "true",
-        tag_audio_events: true,
+    // Add file to form data
+    form.append("file", fileBuffer, fileName)
+    form.append("model_id", "scribe_v1")
+
+    // Add optional parameters
+    if (language && language !== "auto") {
+      form.append("language_code", language)
+    }
+    if (diarization === "true") {
+      form.append("diarize", "true")
+    }
+    form.append("tag_audio_events", "true")
+
+    const elevenLabsResponse = await axios.post("https://api.elevenlabs.io/v1/speech-to-text", form, {
+      headers: {
+        "xi-api-key": apiKey,
+        ...form.getHeaders(),
       },
-      {
-        headers: {
-          "xi-api-key": apiKey,
-          "Content-Type": "application/octet-stream",
-        },
-        timeout: 300000, // 5 minutes for large files
-      },
-    )
+      timeout: 300000, // 5 minutes for large files
+    })
 
     // Clean up temp file
     cleanupFile(tempFilePath)
