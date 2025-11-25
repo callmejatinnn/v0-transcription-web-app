@@ -63,7 +63,7 @@ app.post("/api/transcribe", upload.single("file"), async (req, res) => {
     }
 
     // Extract form fields
-    const { language, response_format, diarization } = req.body
+    const { language, response_format, diarization, min_duration, max_duration } = req.body
 
     const fileBuffer = fs.readFileSync(tempFilePath)
     const fileName = req.file.originalname
@@ -95,13 +95,13 @@ app.post("/api/transcribe", upload.single("file"), async (req, res) => {
     // Clean up temp file
     cleanupFile(tempFilePath)
 
-    // ElevenLabs returns different format, so we transform it
     let formattedData = elevenLabsResponse.data
+    const minDuration = Number.parseFloat(min_duration) || 0.5
+    const maxDuration = Number.parseFloat(max_duration) || 5
 
-    // If response_format is requested as different format, we can add support for that here
+    // If response_format is requested as different format, convert appropriately
     if (response_format === "srt" || response_format === "vtt") {
-      // Convert transcript to SRT/VTT format if needed
-      formattedData = convertToSubtitleFormat(elevenLabsResponse.data, response_format)
+      formattedData = convertToSubtitleFormat(elevenLabsResponse.data, response_format, minDuration, maxDuration)
     }
 
     // Return result
@@ -147,7 +147,7 @@ app.post("/api/transcribe", upload.single("file"), async (req, res) => {
   }
 })
 
-function convertToSubtitleFormat(data, format) {
+function convertToSubtitleFormat(data, format, minDuration = 0.5, maxDuration = 5) {
   const transcript = data.text || data.transcript || ""
   const chunks = data.chunks || []
 
@@ -159,30 +159,86 @@ function convertToSubtitleFormat(data, format) {
     }
   }
 
-  // Convert chunks to SRT/VTT format
+  // Process chunks to respect min/max duration
+  const processedChunks = processChunksWithDuration(chunks, minDuration, maxDuration)
+
   if (format === "srt") {
-    return {
-      text: transcript,
-      chunks: chunks.map((chunk, index) => ({
-        index: index + 1,
-        startTime: formatTimestamp(chunk.begin_time_ms, "srt"),
-        endTime: formatTimestamp(chunk.end_time_ms, "srt"),
-        content: chunk.content,
-      })),
-    }
+    const srtContent = processedChunks
+      .map((chunk) => {
+        return `${chunk.index}\n` + `${chunk.startTime} --> ${chunk.endTime}\n` + `${chunk.content}\n`
+      })
+      .join("\n")
+
+    return srtContent
   } else if (format === "vtt") {
-    return {
-      text: transcript,
-      chunks: chunks.map((chunk, index) => ({
-        index: index + 1,
-        startTime: formatTimestamp(chunk.begin_time_ms, "vtt"),
-        endTime: formatTimestamp(chunk.end_time_ms, "vtt"),
-        content: chunk.content,
-      })),
-    }
+    const vttContent =
+      "WEBVTT\n\n" +
+      processedChunks
+        .map((chunk) => {
+          return `${chunk.startTime} --> ${chunk.endTime}\n${chunk.content}\n`
+        })
+        .join("\n")
+
+    return vttContent
   }
 
   return data
+}
+
+function processChunksWithDuration(chunks, minDuration, maxDuration) {
+  const processed = []
+  let mergedChunk = null
+
+  chunks.forEach((chunk) => {
+    const startTime = chunk.begin_time_ms
+    const endTime = chunk.end_time_ms
+    const duration = (endTime - startTime) / 1000 // Convert to seconds
+
+    if (mergedChunk === null) {
+      mergedChunk = {
+        begin_time_ms: startTime,
+        end_time_ms: endTime,
+        content: chunk.content,
+      }
+    } else {
+      const mergedDuration = (mergedChunk.end_time_ms - mergedChunk.begin_time_ms) / 1000
+
+      // If adding this chunk would exceed maxDuration, finalize the merged chunk
+      if (mergedDuration + duration > maxDuration) {
+        // Only add if it meets minimum duration
+        if (mergedDuration >= minDuration) {
+          processed.push({
+            index: processed.length + 1,
+            startTime: formatTimestamp(mergedChunk.begin_time_ms, "srt"),
+            endTime: formatTimestamp(mergedChunk.end_time_ms, "srt"),
+            content: mergedChunk.content.trim(),
+          })
+        }
+        // Start new chunk
+        mergedChunk = {
+          begin_time_ms: startTime,
+          end_time_ms: endTime,
+          content: chunk.content,
+        }
+      } else {
+        // Merge chunks
+        mergedChunk.end_time_ms = endTime
+        mergedChunk.content += " " + chunk.content
+      }
+    }
+  })
+
+  // Add final chunk if it meets minimum duration
+  if (mergedChunk && (mergedChunk.end_time_ms - mergedChunk.begin_time_ms) / 1000 >= minDuration) {
+    processed.push({
+      index: processed.length + 1,
+      startTime: formatTimestamp(mergedChunk.begin_time_ms, "srt"),
+      endTime: formatTimestamp(mergedChunk.end_time_ms, "srt"),
+      content: mergedChunk.content.trim(),
+    })
+  }
+
+  return processed
 }
 
 function formatTimestamp(milliseconds, format) {
